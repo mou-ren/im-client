@@ -1,3 +1,7 @@
+const MessageUtil = require("./MessageUtil")
+const {TextContent, ChatMessage, Message, MessageType, AuthMessage} = require("./im_pb");
+
+
 class ImClient {
     url;
     openHandler;
@@ -6,6 +10,7 @@ class ImClient {
     closeHandler;
     _ws;
     _open=false;
+    userId;
 
     static defaultHandler(res){
         console.log(res)
@@ -65,13 +70,47 @@ class ImClient {
         client._open = false;
         this._ws.close();
     }
-    send(buffer){
+    _send(buffer){
         if(this._ws.readyState == 1){
             this._ws.send(buffer)
             return true;
         } else {
             return false
         }
+    }
+    login(userId){
+        let timestamp = Date.now()
+        let msg = new AuthMessage();
+        msg.setUserid(userId)
+        msg.setMsgid(MessageUtil.generateMsgId(userId,timestamp))
+        msg.setTimestamp(timestamp)
+
+        let message = new Message()
+        message.setMessagetype(MessageType.AUTH);
+        message.setVersion(1)
+        message.setMessagebody(msg.serializeBinary())
+
+        this._send(message.serializeBinary())
+        this.userId = userId
+    }
+    sendText(toUid,content){
+        let timestamp = Date.now()
+        let text = new TextContent();
+        text.setText(content);
+
+        var msg = new ChatMessage();
+        msg.setUserid(this.userId)
+        msg.setMsgid(MessageUtil.generateMsgId(this.userId,timestamp))
+        msg.setTimestamp(timestamp)
+        msg.setFrom(this.userId)
+        msg.setTo(toUid)
+        msg.setTextcontent(text)
+
+        var message = new Message()
+        message.setMessagetype(MessageType.CHAT);
+        message.setVersion(1)
+        message.setMessagebody(msg.serializeBinary())
+        return this._send(message.serializeBinary())
     }
     _onopen(res){
         this._open = true;

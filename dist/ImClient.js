@@ -3,6 +3,14 @@
 function _defineProperty(obj, key, value) { key = _toPropertyKey(key); if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : String(i); }
 function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+const MessageUtil = require("./MessageUtil");
+const {
+  TextContent,
+  ChatMessage,
+  Message,
+  MessageType,
+  AuthMessage
+} = require("./im_pb");
 class ImClient {
   static defaultHandler(res) {
     console.log(res);
@@ -28,6 +36,7 @@ class ImClient {
     _defineProperty(this, "closeHandler", void 0);
     _defineProperty(this, "_ws", void 0);
     _defineProperty(this, "_open", false);
+    _defineProperty(this, "userId", void 0);
     this.url = url;
     this.openHandler = openHandler;
     this.messageHandler = messageHandler;
@@ -68,13 +77,43 @@ class ImClient {
     client._open = false;
     this._ws.close();
   }
-  send(buffer) {
+  _send(buffer) {
     if (this._ws.readyState == 1) {
       this._ws.send(buffer);
       return true;
     } else {
       return false;
     }
+  }
+  login(userId) {
+    let timestamp = Date.now();
+    let msg = new AuthMessage();
+    msg.setUserid(userId);
+    msg.setMsgid(MessageUtil.generateMsgId(userId, timestamp));
+    msg.setTimestamp(timestamp);
+    let message = new Message();
+    message.setMessagetype(MessageType.AUTH);
+    message.setVersion(1);
+    message.setMessagebody(msg.serializeBinary());
+    this._send(message.serializeBinary());
+    this.userId = userId;
+  }
+  sendText(toUid, content) {
+    let timestamp = Date.now();
+    let text = new TextContent();
+    text.setText(content);
+    var msg = new ChatMessage();
+    msg.setUserid(this.userId);
+    msg.setMsgid(MessageUtil.generateMsgId(this.userId, timestamp));
+    msg.setTimestamp(timestamp);
+    msg.setFrom(this.userId);
+    msg.setTo(toUid);
+    msg.setTextcontent(text);
+    var message = new Message();
+    message.setMessagetype(MessageType.CHAT);
+    message.setVersion(1);
+    message.setMessagebody(msg.serializeBinary());
+    return this._send(message.serializeBinary());
   }
   _onopen(res) {
     this._open = true;
