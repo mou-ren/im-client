@@ -6,6 +6,7 @@ function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = 
 const MessageUtil = require("./MessageUtil");
 const {
   TextContent,
+  FileContent,
   ChatMessage,
   Message,
   MessageType,
@@ -102,6 +103,25 @@ class ImClient {
     let timestamp = Date.now();
     let text = new TextContent();
     text.setText(content);
+    var msg = new ChatMessage();
+    msg.setUserid(this.userId);
+    msg.setMsgid(MessageUtil.generateMsgId(this.userId, timestamp));
+    msg.setTimestamp(timestamp);
+    msg.setFrom(this.userId);
+    msg.setTo(toUid);
+    msg.setTextcontent(text);
+    var message = new Message();
+    message.setMessagetype(MessageType.CHAT);
+    message.setVersion(1);
+    message.setMessagebody(msg.serializeBinary());
+    return this._send(message.serializeBinary());
+  }
+  sendFile(toUid, filename, url, type) {
+    let timestamp = Date.now();
+    let fileContent = new FileContent();
+    fileContent.setFilename(filename);
+    fileContent.setUrl(url);
+    fileContent.setType(type);
     var msg = new ChatMessage();
     msg.setUserid(this.userId);
     msg.setMsgid(MessageUtil.generateMsgId(this.userId, timestamp));
