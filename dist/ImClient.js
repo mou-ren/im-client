@@ -1,8 +1,5 @@
 "use strict";
 
-function _defineProperty(obj, key, value) { key = _toPropertyKey(key); if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : String(i); }
-function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 const MessageUtil = require("./MessageUtil");
 const {
   TextContent,
@@ -13,6 +10,14 @@ const {
   AuthMessage
 } = require("./im_pb");
 class ImClient {
+  url;
+  openHandler;
+  messageHandler;
+  errorHandler;
+  closeHandler;
+  _ws;
+  _open = false;
+  userId;
   static defaultHandler(res) {
     console.log(res);
   }
@@ -30,14 +35,6 @@ class ImClient {
     let messageHandler = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : ImClient.defaultHandler;
     let closeHandler = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : ImClient.defaultHandler;
     let errorHandler = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : ImClient.defaultHandler;
-    _defineProperty(this, "url", void 0);
-    _defineProperty(this, "openHandler", void 0);
-    _defineProperty(this, "messageHandler", void 0);
-    _defineProperty(this, "errorHandler", void 0);
-    _defineProperty(this, "closeHandler", void 0);
-    _defineProperty(this, "_ws", void 0);
-    _defineProperty(this, "_open", false);
-    _defineProperty(this, "userId", void 0);
     this.url = url;
     this.openHandler = openHandler;
     this.messageHandler = messageHandler;
