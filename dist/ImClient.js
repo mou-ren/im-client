@@ -128,7 +128,7 @@ class ImClient {
     msg.setTimestamp(timestamp);
     msg.setFrom(this.userId);
     msg.setTo(toUid);
-    msg.setTextcontent(text);
+    msg.setFileContent(fileContent);
     var message = new Message();
     message.setMessagetype(MessageType.CHAT);
     message.setVersion(1);
